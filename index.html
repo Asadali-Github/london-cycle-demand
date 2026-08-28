@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Two years of Transport for London cycle-hire demand, hour by hour: what the commute looks like, what rain costs, and a forecast tested on data it never saw.">
+<meta name="color-scheme" content="light dark">
+</head>
+<body>
+<title>London Cycle Rhythm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Azeret+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap">
+
+<style>
+:root {
+  --paper:      #E9EEF1;
+  --card:       #FFFFFF;
+  --band:       #0F2430;
+  --band-ink:   #DCE7EE;
+  --ink:        #0F2430;
+  --ink-2:      #3D5666;
+  --muted:      #647E8E;
+  --hair:       #D2DBE1;
+  --hair-soft:  #E4EAEE;
+  --blue:       #0B6E9E;
+  --blue-soft:  rgba(11,110,158,.10);
+  --ochre:      #C07316;
+  --ochre-soft: rgba(192,115,22,.11);
+  --grid:       #E7ECEF;
+  --focus:      #0B6E9E;
+  --null:       #C3CED6;
+  --shadow:     0 1px 2px rgba(15,36,48,.06), 0 8px 24px -14px rgba(15,36,48,.28);
+  /* sequential ramps: single hue, monotonic lightness, weakest step first */
+  --warm-1:#FAE8CE; --warm-2:#F2D29B; --warm-3:#E8B76C; --warm-4:#D89B41;
+  --warm-5:#BE7C22; --warm-6:#9C6015; --warm-7:#78460D;
+  --cool-1:#DCEBF4; --cool-2:#B7D8EA; --cool-3:#8CC0DC; --cool-4:#5EA3C7;
+  --cool-5:#3484AE; --cool-6:#136890; --cool-7:#084C6B;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:      #0B1620;
+    --card:       #132530;
+    --band:       #081019;
+    --band-ink:   #C8DAE5;
+    --ink:        #E4ECF1;
+    --ink-2:      #B3C6D2;
+    --muted:      #8CA3B2;
+    --hair:       #20384A;
+    --hair-soft:  #1A2E3D;
+    --blue:       #3499CB;
+    --blue-soft:  rgba(52,153,203,.14);
+    --ochre:      #C08420;
+    --ochre-soft: rgba(192,132,32,.15);
+    --grid:       #1C3141;
+    --focus:      #58B4E2;
+    --null:       #3A5B72;
+    --shadow:     0 1px 2px rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.8);
+    --warm-1:#6E4C16; --warm-2:#85591A; --warm-3:#9C6C20; --warm-4:#B3812B;
+    --warm-5:#C79A47; --warm-6:#D9B571; --warm-7:#E9CFA0;
+    --cool-1:#1E5878; --cool-2:#26708F; --cool-3:#3089A8; --cool-4:#46A0BE;
+    --cool-5:#66B6CF; --cool-6:#8BCADF; --cool-7:#B0DCEC;
+  }
+}
+:root[data-theme="dark"] {
+  --paper:      #0B1620;
+  --card:       #132530;
+  --band:       #081019;
+  --band-ink:   #C8DAE5;
+  --ink:        #E4ECF1;
+  --ink-2:      #B3C6D2;
+  --muted:      #8CA3B2;
+  --hair:       #20384A;
+  --hair-soft:  #1A2E3D;
+  --blue:       #3499CB;
+  --blue-soft:  rgba(52,153,203,.14);
+  --ochre:      #C08420;
+  --ochre-soft: rgba(192,132,32,.15);
+  --grid:       #1C3141;
+  --focus:      #58B4E2;
+  --null:       #3A5B72;
+  --shadow:     0 1px 2px rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.8);
+  --warm-1:#6E4C16; --warm-2:#85591A; --warm-3:#9C6C20; --warm-4:#B3812B;
+  --warm-5:#C79A47; --warm-6:#D9B571; --warm-7:#E9CFA0;
+  --cool-1:#1E5878; --cool-2:#26708F; --cool-3:#3089A8; --cool-4:#46A0BE;
+  --cool-5:#66B6CF; --cool-6:#8BCADF; --cool-7:#B0DCEC;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+/* ---------- header band ---------- */
+.band { background: var(--band); color: var(--band-ink); padding: 34px 0 0; }
+.band .wrap { display: flex; flex-direction: column; gap: 20px; }
+.masthead { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 28px; justify-content: space-between; }
+h1 {
+  font-size: clamp(30px, 4.4vw, 46px); font-weight: 800; letter-spacing: -.022em;
+  margin: 0; line-height: 1.02; text-wrap: balance; color: #FFFFFF;
+}
+h1 .thin { font-weight: 500; color: var(--band-ink); }
+.standfirst {
+  font-family: Newsreader, Georgia, serif; font-size: 16.5px; line-height: 1.55;
+  max-width: 47ch; color: var(--band-ink); margin: 0; opacity: .92;
+}
+.meta { font-family: "Azeret Mono", ui-monospace, monospace; font-size: 11px;
+  letter-spacing: .07em; text-transform: uppercase; color: #7E9AAC; }
+.meta a { color: #9FBED0; text-underline-offset: 3px; }
+
+/* the service strip: 24 blocks, one per hour, shaded by mean demand */
+.strip { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; margin-bottom: 2px; }
+.strip i { display: block; height: 26px; border-radius: 1px 1px 0 0; background: var(--sw, #123); }
+.strip-axis { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px;
+  font-family: "Azeret Mono", ui-monospace, monospace; font-size: 9px; color: #6B8698;
+  padding-bottom: 18px; }
+.strip-axis span { text-align: center; }
+
+/* ---------- KPI band ---------- */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--card);
+  border-bottom: 1px solid var(--hair); }
+.kpi { padding: 22px 24px 20px; border-left: 1px solid var(--hair-soft); }
+.kpi:first-child { border-left: 0; }
+.kpi .k-label { font-family: "Azeret Mono", ui-monospace, monospace; font-size: 10.5px;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.kpi .k-value { font-size: 33px; font-weight: 800; letter-spacing: -.03em; line-height: 1;
+  font-variant-numeric: tabular-nums; }
+.kpi .k-value.hero { color: var(--blue); }
+.kpi .k-note { font-family: Newsreader, Georgia, serif; font-size: 13.5px; color: var(--ink-2);
+  margin-top: 7px; line-height: 1.4; }
+
+/* ---------- panels ---------- */
+main { padding: 28px 0 56px; display: flex; flex-direction: column; gap: 20px; }
+.row { display: grid; gap: 20px; grid-template-columns: 1fr 1fr; }
+.panel { background: var(--card); border: 1px solid var(--hair); border-radius: 3px;
+  box-shadow: var(--shadow); padding: 20px 22px 18px; display: flex; flex-direction: column; }
+.eyebrow { font-family: "Azeret Mono", ui-monospace, monospace; font-size: 10.5px;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+  display: flex; align-items: baseline; gap: 10px; }
+.eyebrow::after { content: ""; flex: 1; height: 1px; background: var(--hair-soft); }
+h2 { font-size: 20px; font-weight: 700; letter-spacing: -.014em; margin: 9px 0 0;
+  text-wrap: balance; }
+.finding { font-family: Newsreader, Georgia, serif; font-style: italic; font-size: 15.5px;
+  line-height: 1.55; color: var(--ink-2); margin: 14px 0 0; max-width: 68ch; }
+.finding b { font-style: normal; font-weight: 600; color: var(--ink); }
+
+/* legend + controls */
+.chart-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 12px; margin-top: 14px; }
+.legend { display: flex; gap: 16px; font-family: "Azeret Mono", ui-monospace, monospace;
+  font-size: 11px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
+.swatch.line { height: 3px; width: 16px; border-radius: 2px; }
+.seg { display: inline-flex; border: 1px solid var(--hair); border-radius: 3px; overflow: hidden; }
+.seg button { font-family: "Azeret Mono", ui-monospace, monospace; font-size: 11px;
+  letter-spacing: .04em; padding: 5px 11px; background: transparent; color: var(--muted);
+  border: 0; border-left: 1px solid var(--hair); cursor: pointer; }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--card); }
+.seg button:focus-visible, summary:focus-visible, a:focus-visible {
+  outline: 2px solid var(--focus); outline-offset: 2px; }
+
+figure { margin: 12px 0 0; position: relative; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+.grid-line { stroke: var(--grid); stroke-width: 1; }
+.axis-text { font-family: "Azeret Mono", ui-monospace, monospace; font-size: 10px;
+  fill: var(--muted); }
+.mark-label { font-family: "Azeret Mono", ui-monospace, monospace; font-size: 10.5px;
+  font-weight: 500; fill: var(--ink-2);
+  /* a surface halo so a value never has to fight the line it labels */
+  paint-order: stroke; stroke: var(--card); stroke-width: 3.5px; stroke-linejoin: round; }
+.chart-caption { font-family: "Azeret Mono", ui-monospace, monospace; font-size: 10px;
+  letter-spacing: .06em; color: var(--muted); margin: 8px 0 0; }
+.series-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.dot-hi { stroke: var(--card); stroke-width: 2; }
+
+/* tooltip */
+.tip { position: absolute; pointer-events: none; opacity: 0; transform: translate(-50%, -100%);
+  background: var(--band); color: var(--band-ink); border-radius: 3px; padding: 8px 10px;
+  font-family: "Azeret Mono", ui-monospace, monospace; font-size: 11px; line-height: 1.55;
+  white-space: nowrap; z-index: 5; box-shadow: 0 6px 18px -8px rgba(0,0,0,.55); }
+.tip.on { opacity: 1; }
+.tip b { color: #fff; font-weight: 500; }
+.tip .r { display: flex; align-items: center; gap: 6px; }
+
+/* table disclosure */
+details { margin-top: 14px; border-top: 1px solid var(--hair-soft); padding-top: 10px; }
+summary { font-family: "Azeret Mono", ui-monospace, monospace; font-size: 10.5px;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
+.table-scroll { overflow-x: auto; margin-top: 10px; }
+table { border-collapse: collapse; font-size: 12.5px; width: 100%;
+  font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 5px 10px; border-bottom: 1px solid var(--hair-soft);
+  white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-family: "Azeret Mono", ui-monospace, monospace; font-size: 10px;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 400; }
+
+/* model scoreboard */
+.score { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.score-row { display: grid; grid-template-columns: 168px 1fr 74px; align-items: center; gap: 12px; }
+.score-name { font-size: 13px; }
+.score-name small { display: block; font-family: "Azeret Mono", ui-monospace, monospace;
+  font-size: 10px; color: var(--muted); letter-spacing: .04em; }
+.score-track { height: 10px; background: var(--hair-soft); border-radius: 2px; overflow: hidden; }
+.score-fill { height: 100%; border-radius: 0 2px 2px 0; }
+.score-num { font-family: "Azeret Mono", ui-monospace, monospace; font-size: 13px;
+  font-variant-numeric: tabular-nums; text-align: right; font-weight: 500; line-height: 1.3; }
+.score-num small { display: block; font-size: 10px; color: var(--muted); font-weight: 400; }
+
+footer { border-top: 1px solid var(--hair); padding: 22px 0 40px; color: var(--muted);
+  font-size: 13px; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 26px; justify-content: space-between; }
+footer a { color: var(--ink-2); text-underline-offset: 3px; }
+
+@media (max-width: 860px) {
+  .row { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: 1fr 1fr; }
+  .kpi:nth-child(3) { border-left: 0; }
+  .kpi:nth-child(n+3) { border-top: 1px solid var(--hair-soft); }
+  .score-row { grid-template-columns: 120px 1fr 60px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="band">
+  <div class="wrap">
+    <div class="masthead">
+      <h1>London Cycle&nbsp;Rhythm<br><span class="thin">two years, hour by hour</span></h1>
+      <p class="standfirst">The city hires a bike every 3.2&nbsp;seconds. When it rains, some of
+      those riders vanish — but not the ones you would expect.</p>
+    </div>
+    <div>
+      <div class="strip" id="strip" aria-hidden="true"></div>
+      <div class="strip-axis" id="strip-axis"></div>
+    </div>
+  </div>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="wrap">
+<main>
+
+  <!-- 1. hourly profile -->
+  <section class="panel">
+    <div class="eyebrow">01 · The daily shape</div>
+    <h2>A workday has two spikes. A Saturday has one long afternoon.</h2>
+    <div class="chart-head">
+      <div class="legend">
+        <span><i class="swatch line" style="background:var(--blue)"></i>Weekday</span>
+        <span><i class="swatch line" style="background:var(--ochre)"></i>Weekend</span>
+      </div>
+      <div class="seg" role="group" aria-label="Filter hours by weather">
+        <button type="button" data-filter="all" aria-pressed="true">All hours</button>
+        <button type="button" data-filter="clear" aria-pressed="false">Dry</button>
+        <button type="button" data-filter="rain" aria-pressed="false">Raining</button>
+      </div>
+    </div>
+    <figure><svg id="c-hourly" viewBox="0 0 900 320" role="img"
+      aria-label="Mean bike hires by hour of day, weekday versus weekend"></svg>
+      <div class="tip" id="t-hourly"></div></figure>
+    <p class="finding" id="f-hourly"></p>
+    <details><summary>Show the numbers</summary><div class="table-scroll" id="tb-hourly"></div></details>
+  </section>
+
+  <div class="row">
+    <!-- 2. rain by rider type -->
+    <section class="panel">
+      <div class="eyebrow">02 · Who gives up</div>
+      <h2>Rain barely dents the commute. It halves the day out.</h2>
+      <div class="chart-head">
+        <div class="legend">
+          <span><i class="swatch" style="background:var(--ochre)"></i>Dry</span>
+          <span><i class="swatch" style="background:var(--blue)"></i>Raining</span>
+        </div>
+      </div>
+      <figure><svg id="c-rain" viewBox="0 0 440 300" role="img"
+        aria-label="Relative demand in dry versus rainy hours, for commuters and leisure riders"></svg>
+        <div class="tip" id="t-rain"></div></figure>
+      <p class="finding" id="f-rain"></p>
+      <details><summary>Show the numbers</summary><div class="table-scroll" id="tb-rain"></div></details>
+    </section>
+
+    <!-- 3. temperature -->
+    <section class="panel">
+      <div class="eyebrow">03 · Temperature</div>
+      <h2>Demand climbs with every degree and never turns back.</h2>
+      <figure><svg id="c-temp" viewBox="0 0 440 300" role="img"
+        aria-label="Relative demand by air temperature band, dry hours only"></svg>
+        <div class="tip" id="t-temp"></div></figure>
+      <p class="finding" id="f-temp"></p>
+      <details><summary>Show the numbers</summary><div class="table-scroll" id="tb-temp"></div></details>
+    </section>
+  </div>
+
+  <div class="row">
+    <!-- 4. weather ladder -->
+    <section class="panel">
+      <div class="eyebrow">04 · Every sky, ranked</div>
+      <h2>From clear to snow, a two-and-a-half-fold spread.</h2>
+      <figure><svg id="c-sky" viewBox="0 0 440 300" role="img"
+        aria-label="Relative demand under each recorded weather condition"></svg>
+        <div class="tip" id="t-sky"></div></figure>
+      <p class="finding" id="f-sky"></p>
+      <details><summary>Show the numbers</summary><div class="table-scroll" id="tb-sky"></div></details>
+    </section>
+
+    <!-- 5. seasonality -->
+    <section class="panel">
+      <div class="eyebrow">05 · Across the year</div>
+      <h2>Every July runs at roughly twice the January rate.</h2>
+      <figure><svg id="c-month" viewBox="0 0 440 300" role="img"
+        aria-label="Mean hourly hires by calendar month, January 2015 to January 2017"></svg>
+        <div class="tip" id="t-month"></div></figure>
+      <p class="finding" id="f-month"></p>
+      <details><summary>Show the numbers</summary><div class="table-scroll" id="tb-month"></div></details>
+    </section>
+  </div>
+
+  <!-- 6. forecast -->
+  <section class="panel">
+    <div class="eyebrow">06 · Forecast · held-out data</div>
+    <h2>Predicting the next quarter it had never seen.</h2>
+    <p class="finding" id="f-model"></p>
+    <div class="score" id="score"></div>
+    <div class="chart-head" style="margin-top:22px">
+      <div class="legend">
+        <span><i class="swatch line" style="background:var(--blue)"></i>Actual</span>
+        <span><i class="swatch line" style="background:var(--ochre)"></i>Predicted</span>
+      </div>
+      <div class="meta" id="week-range" style="color:var(--muted)"></div>
+    </div>
+    <figure><svg id="c-week" viewBox="0 0 900 300" role="img"
+      aria-label="Actual versus predicted hourly hires across the first week of the test period"></svg>
+      <div class="tip" id="t-week"></div></figure>
+    <details><summary>Show the numbers</summary><div class="table-scroll" id="tb-week"></div></details>
+  </section>
+
+</main>
+</div>
+
+<footer><div class="wrap">
+  <span>Analysis and page by <b>Asad Ali</b> — MSc Data Science, University of Essex.</span>
+  <span>Every figure is produced by <code>analysis.py</code> in the
+    <a href="https://github.com/Asadali-Github/london-cycle-demand">source repository</a>.</span>
+</div></footer>
+
+<script>
+const R = {"data_quality":{"rows":17414,"expected_hours":17544,"missing_hours":130,"missing_pct":0.74,"duplicate_timestamps":0,"null_values":0,"start":"2015-01-04","end":"2017-01-03"},"demand_shape":{"weekday_by_hour":[215,128,81,53,52,116,605,1970,3864,1998,1004,968,1234,1277,1212,1330,1802,3232,3052,1826,1134,789,615,435],"weekend_by_hour":[480,383,276,197,126,97,121,213,416,787,1219,1611,1931,2075,2118,2148,2040,1830,1579,1217,875,622,537,452],"weekday_peak_hour":8,"weekday_peak":3864,"weekend_peak_hour":15,"weekend_peak":2148,"commute_ratio_8am":9.3,"profiles":{"all":{"weekday":[215,128,81,53,52,116,605,1970,3864,1998,1004,968,1234,1277,1212,1330,1802,3232,3052,1826,1134,789,615,435],"weekday_n":[518,518,517,516,516,516,519,519,518,520,520,520,520,519,519,520,521,519,519,519,519,518,517,517],"weekend":[480,383,276,197,126,97,121,213,416,787,1219,1611,1931,2075,2118,2148,2040,1830,1579,1217,875,622,537,452],"weekend_n":[206,206,204,205,205,205,207,207,206,207,205,207,209,209,209,209,209,209,209,208,208,208,208,205]},"clear":{"weekday":[225,135,85,55,54,120,629,2033,3956,2045,1043,1015,1306,1350,1288,1399,1889,3394,3188,1898,1168,820,642,455],"weekday_n":[446,439,438,442,438,440,457,468,474,470,466,464,453,444,445,458,451,445,457,454,477,460,451,453],"weekend":[509,405,293,205,132,101,125,224,433,834,1293,1691,2031,2228,2279,2293,2219,1981,1717,1333,955,671,566,478],"weekend_n":[179,181,174,177,174,178,181,178,186,181,182,188,185,181,183,183,176,179,179,173,173,177,183,178]},"rain":{"weekday":[153,91,61,41,42,94,428,1383,2873,1549,664,580,746,844,755,825,1237,2261,2048,1323,749,541,431,296],"weekday_n":[72,79,79,74,78,76,62,51,44,50,54,56,67,75,74,62,70,74,62,65,42,58,66,64],"weekend":[286,228,180,147,97,75,88,145,255,461,636,811,1158,1085,985,1127,1085,927,760,642,478,344,325,280],"weekend_n":[27,25,30,28,31,27,26,29,20,26,23,19,24,28,26,26,33,30,30,35,35,31,25,27]}}},"weather":{"overall":{"clear":1.048,"rain":0.669,"drop_pct":36,"rain_hours":2215},"commute":{"clear":1.035,"rain":0.714,"drop_pct":31,"rain_hours":281},"leisure":{"clear":1.068,"rain":0.525,"drop_pct":51,"rain_hours":156},"by_weather":[{"label":"Clear","rel":1.117,"hours":6150},{"label":"Scattered cloud","rel":1.058,"hours":4034},{"label":"Broken cloud","rel":0.96,"hours":3551},{"label":"Cloudy","rel":0.947,"hours":1464},{"label":"Rain","rel":0.676,"hours":2141},{"label":"Rain + thunder","rel":0.554,"hours":14},{"label":"Snow","rel":0.445,"hours":60}],"by_temperature":[{"bin":"<0","rel":0.683,"hours":684},{"bin":"0-5","rel":0.749,"hours":2673},{"bin":"5-10","rel":0.865,"hours":2447},{"bin":"10-15","rel":1.051,"hours":4552},{"bin":"15-20","rel":1.301,"hours":3439},{"bin":"20-25","rel":1.474,"hours":1203},{"bin":"25+","rel":1.558,"hours":201}]},"seasonality":{"monthly":[{"month":"2015-01","mean_hourly":815,"hours":671,"complete":true},{"month":"2015-02","mean_hourly":810,"hours":671,"complete":true},{"month":"2015-03","mean_hourly":942,"hours":739,"complete":true},{"month":"2015-04","mean_hourly":1157,"hours":719,"complete":true},{"month":"2015-05","mean_hourly":1204,"hours":744,"complete":true},{"month":"2015-06","mean_hourly":1441,"hours":717,"complete":true},{"month":"2015-07","mean_hourly":1514,"hours":740,"complete":true},{"month":"2015-08","mean_hourly":1390,"hours":744,"complete":true},{"month":"2015-09","mean_hourly":1255,"hours":711,"complete":true},{"month":"2015-10","mean_hourly":1175,"hours":736,"complete":true},{"month":"2015-11","mean_hourly":953,"hours":711,"complete":true},{"month":"2015-12","mean_hourly":815,"hours":740,"complete":true},{"month":"2016-01","mean_hourly":783,"hours":744,"complete":true},{"month":"2016-02","mean_hourly":862,"hours":688,"complete":true},{"month":"2016-03","mean_hourly":901,"hours":729,"complete":true},{"month":"2016-04","mean_hourly":1069,"hours":719,"complete":true},{"month":"2016-05","mean_hourly":1347,"hours":744,"complete":true},{"month":"2016-06","mean_hourly":1325,"hours":705,"complete":true},{"month":"2016-07","mean_hourly":1573,"hours":741,"complete":true},{"month":"2016-08","mean_hourly":1537,"hours":740,"complete":true},{"month":"2016-09","mean_hourly":1462,"hours":683,"complete":true},{"month":"2016-10","mean_hourly":1259,"hours":743,"complete":true},{"month":"2016-11","mean_hourly":979,"hours":719,"complete":true},{"month":"2016-12","mean_hourly":876,"hours":744,"complete":true},{"month":"2017-01","mean_hourly":523,"hours":72,"complete":false}],"by_season":[{"season":"Spring","mean_hourly":1104},{"season":"Summer","mean_hourly":1464},{"season":"Autumn","mean_hourly":1179},{"season":"Winter","mean_hourly":822}]},"forecast":{"train_rows":15136,"test_rows":2278,"test_start":"2016-10-01","test_end":"2017-01-03","mean_baseline":{"mae":786.7,"r2":-0.02},"seasonal_naive":{"mae":277.5,"r2":0.755},"model":{"mae":159.3,"r2":0.92},"improvement_vs_naive_pct":43,"sample_week":{"timestamps":["2016-10-01 00:00:00","2016-10-01 01:00:00","2016-10-01 02:00:00","2016-10-01 03:00:00","2016-10-01 04:00:00","2016-10-01 05:00:00","2016-10-01 06:00:00","2016-10-01 07:00:00","2016-10-01 08:00:00","2016-10-01 09:00:00","2016-10-01 10:00:00","2016-10-01 11:00:00","2016-10-01 12:00:00","2016-10-01 13:00:00","2016-10-01 14:00:00","2016-10-01 15:00:00","2016-10-01 16:00:00","2016-10-01 17:00:00","2016-10-01 18:00:00","2016-10-01 19:00:00","2016-10-01 20:00:00","2016-10-01 21:00:00","2016-10-01 22:00:00","2016-10-01 23:00:00","2016-10-02 00:00:00","2016-10-02 01:00:00","2016-10-02 02:00:00","2016-10-02 03:00:00","2016-10-02 04:00:00","2016-10-02 05:00:00","2016-10-02 06:00:00","2016-10-02 07:00:00","2016-10-02 08:00:00","2016-10-02 09:00:00","2016-10-02 10:00:00","2016-10-02 11:00:00","2016-10-02 12:00:00","2016-10-02 13:00:00","2016-10-02 14:00:00","2016-10-02 15:00:00","2016-10-02 16:00:00","2016-10-02 17:00:00","2016-10-02 18:00:00","2016-10-02 19:00:00","2016-10-02 20:00:00","2016-10-02 21:00:00","2016-10-02 22:00:00","2016-10-02 23:00:00","2016-10-03 00:00:00","2016-10-03 01:00:00","2016-10-03 02:00:00","2016-10-03 03:00:00","2016-10-03 04:00:00","2016-10-03 05:00:00","2016-10-03 06:00:00","2016-10-03 07:00:00","2016-10-03 08:00:00","2016-10-03 09:00:00","2016-10-03 10:00:00","2016-10-03 11:00:00","2016-10-03 12:00:00","2016-10-03 13:00:00","2016-10-03 14:00:00","2016-10-03 15:00:00","2016-10-03 16:00:00","2016-10-03 17:00:00","2016-10-03 18:00:00","2016-10-03 19:00:00","2016-10-03 20:00:00","2016-10-03 21:00:00","2016-10-03 22:00:00","2016-10-03 23:00:00","2016-10-04 00:00:00","2016-10-04 01:00:00","2016-10-04 02:00:00","2016-10-04 03:00:00","2016-10-04 04:00:00","2016-10-04 05:00:00","2016-10-04 06:00:00","2016-10-04 07:00:00","2016-10-04 08:00:00","2016-10-04 09:00:00","2016-10-04 10:00:00","2016-10-04 11:00:00","2016-10-04 12:00:00","2016-10-04 13:00:00","2016-10-04 14:00:00","2016-10-04 15:00:00","2016-10-04 16:00:00","2016-10-04 17:00:00","2016-10-04 18:00:00","2016-10-04 19:00:00","2016-10-04 20:00:00","2016-10-04 21:00:00","2016-10-04 22:00:00","2016-10-04 23:00:00","2016-10-05 00:00:00","2016-10-05 01:00:00","2016-10-05 02:00:00","2016-10-05 03:00:00","2016-10-05 04:00:00","2016-10-05 05:00:00","2016-10-05 06:00:00","2016-10-05 07:00:00","2016-10-05 08:00:00","2016-10-05 09:00:00","2016-10-05 10:00:00","2016-10-05 11:00:00","2016-10-05 12:00:00","2016-10-05 13:00:00","2016-10-05 14:00:00","2016-10-05 15:00:00","2016-10-05 16:00:00","2016-10-05 17:00:00","2016-10-05 18:00:00","2016-10-05 19:00:00","2016-10-05 20:00:00","2016-10-05 21:00:00","2016-10-05 22:00:00","2016-10-05 23:00:00","2016-10-06 00:00:00","2016-10-06 01:00:00","2016-10-06 02:00:00","2016-10-06 03:00:00","2016-10-06 04:00:00","2016-10-06 05:00:00","2016-10-06 06:00:00","2016-10-06 07:00:00","2016-10-06 08:00:00","2016-10-06 09:00:00","2016-10-06 10:00:00","2016-10-06 11:00:00","2016-10-06 12:00:00","2016-10-06 13:00:00","2016-10-06 14:00:00","2016-10-06 15:00:00","2016-10-06 16:00:00","2016-10-06 17:00:00","2016-10-06 18:00:00","2016-10-06 19:00:00","2016-10-06 20:00:00","2016-10-06 21:00:00","2016-10-06 22:00:00","2016-10-06 23:00:00","2016-10-07 00:00:00","2016-10-07 01:00:00","2016-10-07 02:00:00","2016-10-07 03:00:00","2016-10-07 04:00:00","2016-10-07 05:00:00","2016-10-07 06:00:00","2016-10-07 07:00:00","2016-10-07 08:00:00","2016-10-07 09:00:00","2016-10-07 10:00:00","2016-10-07 11:00:00","2016-10-07 12:00:00","2016-10-07 13:00:00","2016-10-07 14:00:00","2016-10-07 15:00:00","2016-10-07 16:00:00","2016-10-07 17:00:00","2016-10-07 18:00:00","2016-10-07 19:00:00","2016-10-07 20:00:00","2016-10-07 21:00:00","2016-10-07 22:00:00","2016-10-07 23:00:00"],"actual":[568,449,360,220,193,120,153,321,681,679,590,671,768,1246,1566,1969,1900,1321,1311,627,480,460,465,475,491,415,291,198,105,85,122,208,405,833,1377,1954,2293,2696,2534,2560,2614,2362,2103,1153,724,628,547,324,191,106,78,32,51,127,633,2442,4652,2272,1121,1194,1418,1532,1520,1650,2420,4638,4278,2195,1266,878,553,335,160,104,86,61,78,137,793,2734,5117,2549,1239,1181,1520,1641,1481,1637,2265,4348,4230,2194,1327,887,614,424,196,105,67,45,62,162,803,2710,5322,2481,1235,1124,1524,1518,1425,1569,2185,4279,3826,2015,1316,901,705,418,245,173,87,59,57,129,709,2611,5033,2496,1206,1103,1448,1536,1384,1552,2235,3999,3663,1892,1236,877,764,511,344,170,139,98,72,128,640,2175,4543,2203,1093,1171,1330,1510,1403,1613,2316,3824,3134,1785,1048,830,742,739],"predicted":[590,470,304,213,162,108,219,406,799,794,1065,1120,1373,1375,2583,2614,1883,1698,1574,681,561,503,618,518,534,457,350,251,163,125,143,337,386,719,1568,1907,2301,2702,2665,2776,2690,2560,2050,1409,923,616,528,424,223,135,94,64,57,129,652,2243,4409,2286,1090,1033,1359,1420,1454,1585,2255,4065,4002,2198,1187,844,593,350,240,157,104,75,80,140,723,2203,4577,2409,1059,1042,1399,1285,1164,1298,1758,3227,3180,1830,1218,854,714,470,252,146,118,98,98,137,778,2423,4611,2238,1146,1029,1351,1324,1283,1351,1707,3415,3425,1900,1243,808,681,464,252,143,95,68,75,216,747,2528,4661,2485,1144,1114,1294,1272,1335,1396,1810,3557,3287,1880,1184,819,634,516,314,201,133,136,101,133,700,2110,4227,1798,1227,1185,1453,1432,1352,1511,1905,3241,2827,1622,1002,824,706,623]}},"headline":{"total_hires":19905972,"mean_hourly":1143,"busiest_hour_count":7860,"busiest_hour_when":"2015-07-09 17:00:00"}};
+
+/* ---------- tiny chart toolkit ---------- */
+const NS = "http://www.w3.org/2000/svg";
+const el = (n, a = {}) => { const e = document.createElementNS(NS, n);
+  for (const k in a) e.setAttribute(k, a[k]); return e; };
+const fmt = n => n.toLocaleString("en-GB");
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+function tooltip(fig, tip) {
+  return {
+    show(x, y, html) { tip.innerHTML = html; tip.classList.add("on");
+      const r = fig.getBoundingClientRect(), s = fig.querySelector("svg").getBoundingClientRect();
+      tip.style.left = (s.left - r.left + x * s.width) + "px";
+      tip.style.top  = (s.top  - r.top  + y * s.height - 10) + "px"; },
+    hide() { tip.classList.remove("on"); }
+  };
+}
+const dot = c => `<i class="swatch" style="background:${c};width:8px;height:8px"></i>`;
+
+/** Axis ticks a person would have chosen: about four intervals, on a round step. */
+function ticks(max, steps = [1, 2, 2.5, 4, 5, 10]) {
+  const raw = max / 4, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = (steps.find(s => s * mag >= raw) ?? 10) * mag;
+  const top = Math.ceil(max / step - 1e-9) * step;
+  const values = [];
+  for (let i = 0; i * step <= top + 1e-9; i++) values.push(+(i * step).toFixed(6));
+  return { step, values, max: top };
+}
+
+/** Draw a line with a surface-coloured halo beneath, so crossings stay readable. */
+function halo(svg, d, stroke, extra = {}) {
+  svg.appendChild(el("path", { class: "series-line", d, stroke: css("--card"),
+    "stroke-width": 5, opacity: .9 }));
+  svg.appendChild(el("path", Object.assign({ class: "series-line", d, stroke }, extra)));
+}
+
+function table(host, cols, rows) {
+  const t = document.createElement("table");
+  t.innerHTML = "<thead><tr>" + cols.map(c => `<th>${c}</th>`).join("") + "</tr></thead><tbody>"
+    + rows.map(r => "<tr>" + r.map(v => `<td>${v}</td>`).join("") + "</tr>").join("") + "</tbody>";
+  host.replaceChildren(t);
+}
+
+/* ---------- header: service strip ---------- */
+(function () {
+  const all = R.demand_shape.profiles.all;
+  const hourly = all.weekday.map((v, i) =>
+    (v * all.weekday_n[i] + all.weekend[i] * all.weekend_n[i]) / (all.weekday_n[i] + all.weekend_n[i]));
+  const max = Math.max(...hourly);
+  const strip = document.getElementById("strip"), axis = document.getElementById("strip-axis");
+  hourly.forEach((v, h) => {
+    const i = document.createElement("i");
+    const t = v / max;
+    i.style.setProperty("--sw", `rgba(120,190,225,${(0.10 + t * 0.85).toFixed(3)})`);
+    i.style.height = (8 + t * 24).toFixed(1) + "px";
+    i.style.alignSelf = "end";
+    i.title = `${String(h).padStart(2, "0")}:00 — ${fmt(Math.round(v))} hires/hour`;
+    strip.appendChild(i);
+  });
+  strip.style.alignItems = "end"; strip.style.height = "34px";
+  for (let h = 0; h < 24; h++) {
+    const s = document.createElement("span");
+    s.textContent = h % 6 === 0 ? String(h).padStart(2, "0") : "";
+    axis.appendChild(s);
+  }
+})();
+
+/* ---------- KPI band ---------- */
+(function () {
+  const q = R.data_quality, h = R.headline, s = R.demand_shape, w = R.weather, f = R.forecast;
+  const cells = [
+    { l: "Hires analysed", v: (h.total_hires / 1e6).toFixed(1) + "M", cls: "",
+      n: `${fmt(q.rows)} hours of data, Jan 2015 – Jan 2017` },
+    { l: "8am, weekday vs weekend", v: s.commute_ratio_8am + "×", cls: "",
+      n: `${fmt(s.weekday_by_hour[8])} hires against ${fmt(s.weekend_by_hour[8])}` },
+    { l: "Demand lost to rain", v: "−" + w.overall.drop_pct + "%", cls: "",
+      n: `measured across ${fmt(w.overall.rain_hours)} wet hours` },
+    { l: "Forecast error", v: fmt(f.model.mae), cls: "hero",
+      n: `bikes per hour — ${f.improvement_vs_naive_pct}% below the baseline` }
+  ];
+  document.getElementById("kpis").innerHTML = cells.map(c =>
+    `<div class="kpi"><div class="k-label">${c.l}</div>
+     <div class="k-value ${c.cls}">${c.v}</div><div class="k-note">${c.n}</div></div>`).join("");
+})();
+
+/* ---------- 1. hourly profile ---------- */
+const hourly = (function () {
+  const svg = document.getElementById("c-hourly");
+  const fig = svg.parentElement, tip = tooltip(fig, document.getElementById("t-hourly"));
+  const W = 900, H = 320, M = { t: 14, r: 16, b: 32, l: 52 };
+  const iw = W - M.l - M.r, ih = H - M.t - M.b;
+  const yMax = 4200;
+  const x = h => M.l + (h / 23) * iw;
+  const y = v => M.t + ih - (v / yMax) * ih;
+  let state = "all";
+
+  function draw() {
+    const p = R.demand_shape.profiles[state];
+    svg.replaceChildren();
+    for (let v = 0; v <= yMax; v += 1000) {
+      svg.appendChild(el("line", { class: "grid-line", x1: M.l, x2: W - M.r, y1: y(v), y2: y(v) }));
+      const t = el("text", { class: "axis-text", x: M.l - 10, y: y(v) + 3.5, "text-anchor": "end" });
+      t.textContent = fmt(v); svg.appendChild(t);
+    }
+    for (let h = 0; h < 24; h += 3) {
+      const t = el("text", { class: "axis-text", x: x(h), y: H - M.b + 18, "text-anchor": "middle" });
+      t.textContent = String(h).padStart(2, "0"); svg.appendChild(t);
+    }
+    const series = [["weekend", css("--ochre"), css("--ochre-soft")],
+                    ["weekday", css("--blue"),  css("--blue-soft")]];
+    const paths = {};
+    for (const [k] of series)
+      paths[k] = p[k].map((v, h) => (h ? "L" : "M") + x(h).toFixed(1) + " " + y(v).toFixed(1)).join(" ");
+    // Only the weekday area is filled. Two overlapping fills would blend into a
+    // third colour that means nothing; the fill marks which series leads.
+    svg.appendChild(el("path", { d: `${paths.weekday} L${x(23)} ${y(0)} L${x(0)} ${y(0)} Z`,
+      fill: css("--blue-soft") }));
+    for (const [k, stroke] of series) halo(svg, paths[k], stroke);
+
+    // direct labels on the two defining peaks
+    const wdPeak = p.weekday.indexOf(Math.max(...p.weekday));
+    const wePeak = p.weekend.indexOf(Math.max(...p.weekend));
+    const lab = (h, v, txt, fill, dy) => {
+      svg.appendChild(el("circle", { class: "dot-hi", cx: x(h), cy: y(v), r: 4, fill }));
+      const t = el("text", { class: "mark-label", x: x(h), y: y(v) + dy, "text-anchor": "middle",
+        fill, "font-weight": 600 });
+      t.textContent = txt; svg.appendChild(t);
+    };
+    lab(wdPeak, p.weekday[wdPeak], `${fmt(p.weekday[wdPeak])} at ${String(wdPeak).padStart(2, "0")}:00`,
+        css("--blue"), -15);
+    lab(wePeak, p.weekend[wePeak], `${fmt(p.weekend[wePeak])} at ${String(wePeak).padStart(2, "0")}:00`,
+        css("--ochre"), -15);
+
+    const cross = el("line", { class: "grid-line", stroke: css("--muted"), "stroke-dasharray": "3 3",
+      y1: M.t, y2: M.t + ih, opacity: 0 });
+    svg.appendChild(cross);
+    const hit = el("rect", { x: M.l, y: M.t, width: iw, height: ih, fill: "transparent" });
+    svg.appendChild(hit);
+    const move = ev => {
+      const r = svg.getBoundingClientRect();
+      const h = Math.max(0, Math.min(23, Math.round(((ev.clientX - r.left) / r.width * W - M.l) / iw * 23)));
+      cross.setAttribute("opacity", 1); cross.setAttribute("x1", x(h)); cross.setAttribute("x2", x(h));
+      tip.show(x(h) / W, y(Math.max(p.weekday[h], p.weekend[h])) / H,
+        `<b>${String(h).padStart(2, "0")}:00</b><br>
+         <span class="r">${dot(css("--blue"))}Weekday ${fmt(p.weekday[h])}</span>
+         <span class="r">${dot(css("--ochre"))}Weekend ${fmt(p.weekend[h])}</span>
+         <span style="opacity:.6">n = ${fmt(p.weekday_n[h] + p.weekend_n[h])} hours</span>`);
+    };
+    hit.addEventListener("mousemove", move);
+    hit.addEventListener("mouseleave", () => { tip.hide(); cross.setAttribute("opacity", 0); });
+
+    // Peaks are read off the filtered profile, so the sentence always describes
+    // the curve on screen rather than the all-hours one.
+    const peakIn = (arr, lo, hi) => arr.reduce((best, v, h) =>
+      (h >= lo && h <= hi && v > arr[best]) ? h : best, lo);
+    const hh = h => String(h).padStart(2, "0") + ":00";
+    const ratio = (p.weekday[8] / p.weekend[8]).toFixed(1);
+    const note = { all: "across every hour on record",
+                   clear: "counting only the hours with no rain or snow",
+                   rain: "counting only the hours it was raining or snowing" }[state];
+    document.getElementById("f-hourly").innerHTML =
+      `Weekday demand peaks at <b>${hh(peakIn(p.weekday, 5, 11))}</b> and again at
+       <b>${hh(peakIn(p.weekday, 15, 21))}</b> — the two ends of a commute. Weekend demand has no
+       morning at all; it drifts up to a single crest at <b>${hh(wePeak)}</b>. At 8am a workday runs
+       <b>${ratio}×</b> the weekend level, ${note}.`;
+
+    table(document.getElementById("tb-hourly"),
+      ["Hour", "Weekday hires", "Weekday hours", "Weekend hires", "Weekend hours"],
+      p.weekday.map((v, h) => [String(h).padStart(2, "0") + ":00", fmt(v), fmt(p.weekday_n[h]),
+        fmt(p.weekend[h]), fmt(p.weekend_n[h])]));
+  }
+
+  document.querySelectorAll("[data-filter]").forEach(b =>
+    b.addEventListener("click", () => {
+      state = b.dataset.filter;
+      document.querySelectorAll("[data-filter]").forEach(o =>
+        o.setAttribute("aria-pressed", String(o === b)));
+      draw();
+    }));
+  draw();
+  return { draw };
+})();
+
+/* ---------- 2. rain by rider type ---------- */
+(function () {
+  const svg = document.getElementById("c-rain");
+  const fig = svg.parentElement, tip = tooltip(fig, document.getElementById("t-rain"));
+  const W = 440, H = 300, M = { t: 26, r: 12, b: 52, l: 46 };
+  const iw = W - M.l - M.r, ih = H - M.t - M.b;
+  const w = R.weather;
+  const groups = [
+    { name: "Commuters", sub: "Mon–Fri, 07–09 & 17–18", d: w.commute },
+    { name: "Leisure", sub: "Sat–Sun, 11–16", d: w.leisure }
+  ];
+  const ax = ticks(Math.max(...groups.flatMap(g => [g.d.clear, g.d.rain])));
+  const yMax = ax.max, y = v => M.t + ih - (v / yMax) * ih;
+  for (const v of ax.values) {
+    svg.appendChild(el("line", { class: "grid-line", x1: M.l, x2: W - M.r, y1: y(v), y2: y(v) }));
+    const t = el("text", { class: "axis-text", x: M.l - 9, y: y(v) + 3.5, "text-anchor": "end" });
+    t.textContent = v.toFixed(1); svg.appendChild(t);
+  }
+  const gw = iw / groups.length, bw = 44;
+  groups.forEach((g, i) => {
+    const cx = M.l + gw * (i + .5);
+    [["clear", g.d.clear, css("--ochre"), -1], ["rain", g.d.rain, css("--blue"), 1]].forEach(([k, v, c, side]) => {
+      const bx = cx + side * (bw / 2 + 1) - (side < 0 ? bw : 0);
+      const r = el("rect", { x: bx, y: y(v), width: bw, height: M.t + ih - y(v), fill: c, rx: 3 });
+      r.addEventListener("mousemove", () => tip.show((bx + bw / 2) / W, y(v) / H,
+        `<b>${g.name} · ${k === "clear" ? "dry" : "raining"}</b><br>
+         relative demand ${v.toFixed(3)}<br><span style="opacity:.6">1.000 = the typical hour</span>`));
+      r.addEventListener("mouseleave", tip.hide);
+      svg.appendChild(r);
+      const t = el("text", { class: "mark-label", x: bx + bw / 2, y: y(v) - 7, "text-anchor": "middle" });
+      t.textContent = v.toFixed(2); svg.appendChild(t);
+    });
+    const drop = el("text", { class: "mark-label", x: cx, y: M.t - 10, "text-anchor": "middle",
+      fill: css("--blue"), "font-weight": 600 });
+    drop.textContent = `−${g.d.drop_pct}%`; svg.appendChild(drop);
+    const n = el("text", { class: "axis-text", x: cx, y: H - M.b + 18, "text-anchor": "middle",
+      "font-size": 12, fill: css("--ink") });
+    n.textContent = g.name; svg.appendChild(n);
+    const s = el("text", { class: "axis-text", x: cx, y: H - M.b + 33, "text-anchor": "middle" });
+    s.textContent = g.sub; svg.appendChild(s);
+  });
+  svg.appendChild(el("line", { x1: M.l, x2: W - M.r, y1: y(1), y2: y(1),
+    stroke: css("--muted"), "stroke-dasharray": "4 3" }));
+  const base = el("text", { class: "axis-text", x: W - M.r, y: y(1) - 6, "text-anchor": "end" });
+  base.textContent = "typical hour"; svg.appendChild(base);
+
+  document.getElementById("f-rain").innerHTML =
+    `Both groups are compared against their own normal — demand at the same hour, on the same kind
+     of day — so the drop is rain, not time of day. Commuters lose <b>${w.commute.drop_pct}%</b>;
+     weekend leisure riders lose <b>${w.leisure.drop_pct}%</b>. People who have to be somewhere still
+     go. The ones riding for pleasure stay in.`;
+  table(document.getElementById("tb-rain"),
+    ["Group", "Dry", "Raining", "Drop", "Wet hours observed"],
+    groups.map(g => [g.name, g.d.clear.toFixed(3), g.d.rain.toFixed(3),
+      "−" + g.d.drop_pct + "%", fmt(g.d.rain_hours)]));
+})();
+
+/* ---------- 3. temperature ---------- */
+(function () {
+  const svg = document.getElementById("c-temp");
+  const fig = svg.parentElement, tip = tooltip(fig, document.getElementById("t-temp"));
+  const W = 440, H = 300, M = { t: 26, r: 12, b: 52, l: 46 };
+  const iw = W - M.l - M.r, ih = H - M.t - M.b;
+  const bins = R.weather.by_temperature;
+  const ax = ticks(Math.max(...bins.map(b => b.rel)));
+  const yMax = ax.max, y = v => M.t + ih - (v / yMax) * ih;
+  for (const v of ax.values) {
+    svg.appendChild(el("line", { class: "grid-line", x1: M.l, x2: W - M.r, y1: y(v), y2: y(v) }));
+    const t = el("text", { class: "axis-text", x: M.l - 9, y: y(v) + 3.5, "text-anchor": "end" });
+    t.textContent = v.toFixed(1); svg.appendChild(t);
+  }
+  const step = iw / bins.length, bw = step - 8;
+  bins.forEach((b, i) => {
+    const bx = M.l + step * i + 4, c = css("--warm-" + (i + 1));
+    const r = el("rect", { x: bx, y: y(b.rel), width: bw, height: M.t + ih - y(b.rel), fill: c, rx: 3 });
+    r.addEventListener("mousemove", () => tip.show((bx + bw / 2) / W, y(b.rel) / H,
+      `<b>${b.bin}°C</b><br>relative demand ${b.rel.toFixed(3)}<br>
+       <span style="opacity:.6">${fmt(b.hours)} dry hours</span>`));
+    r.addEventListener("mouseleave", tip.hide);
+    svg.appendChild(r);
+    const t = el("text", { class: "axis-text", x: bx + bw / 2, y: H - M.b + 18, "text-anchor": "middle" });
+    t.textContent = b.bin; svg.appendChild(t);
+  });
+  const lo = bins[0], hi = bins[bins.length - 1];
+  [[0, lo], [bins.length - 1, hi]].forEach(([i, b]) => {
+    const t = el("text", { class: "mark-label", x: M.l + step * i + bw / 2 + 4, y: y(b.rel) - 7,
+      "text-anchor": "middle", "font-weight": 600 });
+    t.textContent = b.rel.toFixed(2); svg.appendChild(t);
+  });
+  svg.appendChild(el("line", { x1: M.l, x2: W - M.r, y1: y(1), y2: y(1),
+    stroke: css("--muted"), "stroke-dasharray": "4 3" }));
+  // Anchored left, where the cold bars are short — the right-hand bars are tall.
+  const bl = el("text", { class: "mark-label", x: M.l + 4, y: y(1) - 6, "text-anchor": "start",
+    fill: css("--muted") });
+  bl.textContent = "typical hour"; svg.appendChild(bl);
+  const cap = el("text", { class: "axis-text", x: W / 2, y: H - 8, "text-anchor": "middle" });
+  cap.textContent = "feels-like temperature, dry hours only"; svg.appendChild(cap);
+
+  document.getElementById("f-temp").innerHTML =
+    `Below freezing the city rides at <b>${lo.rel.toFixed(2)}</b> of its normal rate; above 25°C,
+     <b>${hi.rel.toFixed(2)}</b> — a <b>${(hi.rel / lo.rel).toFixed(1)}×</b> spread with no
+     turning point at the top. London never gets hot enough to put cyclists off.`;
+  table(document.getElementById("tb-temp"), ["Temperature", "Relative demand", "Dry hours"],
+    bins.map(b => [b.bin + "°C", b.rel.toFixed(3), fmt(b.hours)]));
+})();
+
+/* ---------- 4. weather ladder ---------- */
+(function () {
+  const svg = document.getElementById("c-sky");
+  const fig = svg.parentElement, tip = tooltip(fig, document.getElementById("t-sky"));
+  const W = 440, H = 300, M = { t: 10, r: 58, b: 30, l: 108 };
+  const iw = W - M.l - M.r, ih = H - M.t - M.b;
+  const rows = R.weather.by_weather.slice().sort((a, b) => b.rel - a.rel);
+  const max = 1.2, x = v => (v / max) * iw;
+  const step = ih / rows.length, bh = Math.min(20, step - 6);
+  const ramp = ["--cool-7", "--cool-6", "--cool-5", "--cool-4", "--cool-3", "--cool-2", "--cool-1"];
+  rows.forEach((r, i) => {
+    const yy = M.t + step * i + (step - bh) / 2;
+    const bar = el("rect", { x: M.l, y: yy, width: Math.max(2, x(r.rel)), height: bh,
+      fill: css(ramp[i]), rx: 3 });
+    bar.addEventListener("mousemove", () => tip.show((M.l + x(r.rel)) / W, yy / H,
+      `<b>${r.label}</b><br>relative demand ${r.rel.toFixed(3)}<br>
+       <span style="opacity:.6">${fmt(r.hours)} hours observed</span>`));
+    bar.addEventListener("mouseleave", tip.hide);
+    svg.appendChild(bar);
+    const lab = el("text", { class: "axis-text", x: M.l - 10, y: yy + bh / 2 + 3.5,
+      "text-anchor": "end", "font-size": 11, fill: css("--ink") });
+    lab.textContent = r.label; svg.appendChild(lab);
+    const val = el("text", { class: "mark-label", x: M.l + x(r.rel) + 10, y: yy + bh / 2 + 3.5 });
+    val.textContent = r.rel.toFixed(2) + (r.hours < 100 ? " *" : ""); svg.appendChild(val);
+  });
+  svg.appendChild(el("line", { class: "grid-line", x1: M.l + x(1), x2: M.l + x(1),
+    y1: M.t - 4, y2: M.t + ih + 4, stroke: css("--muted"), "stroke-dasharray": "4 3" }));
+  const b = el("text", { class: "axis-text", x: M.l + x(1), y: M.t + ih + 20, "text-anchor": "middle" });
+  b.textContent = "1.00 = a typical hour"; svg.appendChild(b);
+  const note = el("text", { class: "axis-text", x: M.l - 4, y: M.t + ih + 20, "text-anchor": "start" });
+  note.textContent = "* under 100 hours"; svg.appendChild(note);
+
+  const clear = rows[0], worst = rows[rows.length - 1];
+  document.getElementById("f-sky").innerHTML =
+    `Clear skies run <b>${clear.rel.toFixed(2)}</b>; snow runs <b>${worst.rel.toFixed(2)}</b>.
+     Cloud costs almost nothing — the collapse begins the moment precipitation starts. The thunder
+     and snow rows rest on ${fmt(worst.hours)} and ${fmt(rows[rows.length - 2].hours)} hours
+     respectively, so read them as direction, not as precision.`;
+  table(document.getElementById("tb-sky"), ["Condition", "Relative demand", "Hours observed"],
+    rows.map(r => [r.label, r.rel.toFixed(3), fmt(r.hours)]));
+})();
+
+/* ---------- 5. seasonality ---------- */
+(function () {
+  const svg = document.getElementById("c-month");
+  const fig = svg.parentElement, tip = tooltip(fig, document.getElementById("t-month"));
+  const W = 440, H = 300, M = { t: 22, r: 14, b: 44, l: 46 };
+  const iw = W - M.l - M.r, ih = H - M.t - M.b;
+  // Only whole months are plotted: the feed stops on 3 January 2017, and drawing
+  // a three-day month as a month would invent a cliff that isn't in the data.
+  const all = R.seasonality.monthly, pts = all.filter(p => p.complete);
+  const partial = all.filter(p => !p.complete);
+  const x = i => M.l + (i / (pts.length - 1)) * iw;
+  const ax = ticks(Math.max(...pts.map(p => p.mean_hourly)));
+  const yMax = ax.max, y = v => M.t + ih - (v / yMax) * ih;
+  for (const v of ax.values) {
+    svg.appendChild(el("line", { class: "grid-line", x1: M.l, x2: W - M.r, y1: y(v), y2: y(v) }));
+    const t = el("text", { class: "axis-text", x: M.l - 9, y: y(v) + 3.5, "text-anchor": "end" });
+    t.textContent = fmt(v); svg.appendChild(t);
+  }
+  const d = pts.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p.mean_hourly).toFixed(1)).join(" ");
+  svg.appendChild(el("path", { d: `${d} L${x(pts.length - 1)} ${y(0)} L${x(0)} ${y(0)} Z`,
+    fill: css("--blue-soft") }));
+  halo(svg, d, css("--blue"));
+  pts.forEach((p, i) => {
+    if (p.month.endsWith("-01") || p.month.endsWith("-07")) {
+      const t = el("text", { class: "axis-text", x: x(i), y: H - M.b + 18, "text-anchor": "middle" });
+      t.textContent = p.month.endsWith("-01") ? "Jan " + p.month.slice(2, 4) : "Jul";
+      svg.appendChild(t);
+      svg.appendChild(el("line", { class: "grid-line", x1: x(i), x2: x(i), y1: M.t, y2: M.t + ih,
+        "stroke-dasharray": "2 4" }));
+    }
+  });
+  const peak = pts.reduce((a, b, i) => b.mean_hourly > pts[a].mean_hourly ? i : a, 0);
+  svg.appendChild(el("circle", { class: "dot-hi", cx: x(peak), cy: y(pts[peak].mean_hourly), r: 4.5,
+    fill: css("--blue") }));
+  const pl = el("text", { class: "mark-label", x: x(peak), y: y(pts[peak].mean_hourly) - 12,
+    "text-anchor": "middle", "font-weight": 600, fill: css("--blue") });
+  pl.textContent = fmt(pts[peak].mean_hourly); svg.appendChild(pl);
+
+  const cross = el("line", { class: "grid-line", stroke: css("--muted"), "stroke-dasharray": "3 3",
+    y1: M.t, y2: M.t + ih, opacity: 0 });
+  svg.appendChild(cross);
+  const hit = el("rect", { x: M.l, y: M.t, width: iw, height: ih, fill: "transparent" });
+  svg.appendChild(hit);
+  hit.addEventListener("mousemove", ev => {
+    const r = svg.getBoundingClientRect();
+    const i = Math.max(0, Math.min(pts.length - 1,
+      Math.round(((ev.clientX - r.left) / r.width * W - M.l) / iw * (pts.length - 1))));
+    cross.setAttribute("opacity", 1); cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i));
+    tip.show(x(i) / W, y(pts[i].mean_hourly) / H,
+      `<b>${pts[i].month}</b><br>${fmt(pts[i].mean_hourly)} hires per hour`);
+  });
+  hit.addEventListener("mouseleave", () => { tip.hide(); cross.setAttribute("opacity", 0); });
+
+  const at = m => pts.find(p => p.month === m).mean_hourly;
+  const r15 = at("2015-07") / at("2015-01"), r16 = at("2016-07") / at("2016-01");
+  document.getElementById("f-month").innerHTML =
+    `July 2015 ran <b>${r15.toFixed(1)}×</b> the January rate; July 2016 ran
+     <b>${r16.toFixed(1)}×</b>. The curve repeats almost exactly a year apart — which is the
+     regularity the forecast below leans on.${partial.length
+       ? ` ${partial.map(p => p.month).join(", ")} is excluded: the feed ends mid-month.` : ""}`;
+  table(document.getElementById("tb-month"), ["Month", "Mean hires per hour", "Hours"],
+    all.map(p => [p.month + (p.complete ? "" : " (partial)"), fmt(p.mean_hourly), fmt(p.hours)]));
+})();
+
+/* ---------- 6. forecast ---------- */
+(function () {
+  const f = R.forecast;
+  const models = [
+    { n: "This model", s: "gradient boosting, 13 features", d: f.model, c: "--blue" },
+    { n: "Hour-of-week average", s: "the obvious baseline", d: f.seasonal_naive, c: "--cool-3" },
+    { n: "Overall average", s: "the null model", d: f.mean_baseline, c: "--null" }
+  ];
+  const worst = Math.max(...models.map(m => m.d.mae));
+  document.getElementById("score").innerHTML = models.map(m => `
+    <div class="score-row">
+      <div class="score-name">${m.n}<small>${m.s}</small></div>
+      <div class="score-track"><div class="score-fill"
+        style="width:${(m.d.mae / worst * 100).toFixed(1)}%;background:var(${m.c})"></div></div>
+      <div class="score-num">${fmt(m.d.mae)}<small>R² ${m.d.r2.toFixed(2)}</small></div>
+    </div>`).join("")
+    + `<p class="chart-caption">Mean absolute error in bikes per hour · lower is better</p>`;
+
+  document.getElementById("f-model").innerHTML =
+    `Trained on <b>${fmt(f.train_rows)}</b> hours up to ${f.test_start}, then asked for the
+     <b>${fmt(f.test_rows)}</b> hours after it — a strictly forward split, so nothing from the test
+     quarter could leak backwards. It misses by <b>${f.model.mae}</b> bikes an hour on average
+     (R² ${f.model.r2}), <b>${f.improvement_vs_naive_pct}%</b> better than simply predicting
+     each hour's historical average.`;
+  document.getElementById("week-range").textContent =
+    `${f.sample_week.timestamps[0].slice(0, 10)} → ${f.sample_week.timestamps[167].slice(0, 10)}`;
+
+  const svg = document.getElementById("c-week");
+  const fig = svg.parentElement, tip = tooltip(fig, document.getElementById("t-week"));
+  const W = 900, H = 300, M = { t: 16, r: 16, b: 40, l: 52 };
+  const iw = W - M.l - M.r, ih = H - M.t - M.b;
+  const A = f.sample_week.actual, P = f.sample_week.predicted, T = f.sample_week.timestamps;
+  const ax = ticks(Math.max(...A, ...P));
+  const yMax = ax.max;
+  const x = i => M.l + (i / (A.length - 1)) * iw;
+  const y = v => M.t + ih - (v / yMax) * ih;
+  for (const v of ax.values) {
+    svg.appendChild(el("line", { class: "grid-line", x1: M.l, x2: W - M.r, y1: y(v), y2: y(v) }));
+    const t = el("text", { class: "axis-text", x: M.l - 10, y: y(v) + 3.5, "text-anchor": "end" });
+    t.textContent = fmt(v); svg.appendChild(t);
+  }
+  const days = ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
+  for (let d = 0; d < 7; d++) {
+    const i = d * 24;
+    svg.appendChild(el("line", { class: "grid-line", x1: x(i), x2: x(i), y1: M.t, y2: M.t + ih,
+      "stroke-dasharray": "2 4" }));
+    const t = el("text", { class: "axis-text", x: x(i + 12), y: H - M.b + 20, "text-anchor": "middle",
+      "font-size": 11 });
+    t.textContent = days[d] + " " + T[i].slice(8, 10); svg.appendChild(t);
+  }
+  const path = arr => arr.map((v, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1)).join(" ");
+  svg.appendChild(el("path", { d: `${path(A)} L${x(A.length - 1)} ${y(0)} L${x(0)} ${y(0)} Z`,
+    fill: css("--blue-soft") }));
+  halo(svg, path(A), css("--blue"));
+  svg.appendChild(el("path", { class: "series-line", d: path(P), stroke: css("--ochre"),
+    "stroke-dasharray": "5 3", "stroke-width": 1.8 }));
+
+  const cross = el("line", { class: "grid-line", stroke: css("--muted"), "stroke-dasharray": "3 3",
+    y1: M.t, y2: M.t + ih, opacity: 0 });
+  svg.appendChild(cross);
+  const hit = el("rect", { x: M.l, y: M.t, width: iw, height: ih, fill: "transparent" });
+  svg.appendChild(hit);
+  hit.addEventListener("mousemove", ev => {
+    const r = svg.getBoundingClientRect();
+    const i = Math.max(0, Math.min(A.length - 1,
+      Math.round(((ev.clientX - r.left) / r.width * W - M.l) / iw * (A.length - 1))));
+    cross.setAttribute("opacity", 1); cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i));
+    tip.show(x(i) / W, y(Math.max(A[i], P[i])) / H,
+      `<b>${T[i].slice(0, 16)}</b><br>
+       <span class="r">${dot(css("--blue"))}Actual ${fmt(A[i])}</span>
+       <span class="r">${dot(css("--ochre"))}Predicted ${fmt(P[i])}</span>
+       <span style="opacity:.6">off by ${fmt(Math.abs(A[i] - P[i]))}</span>`);
+  });
+  hit.addEventListener("mouseleave", () => { tip.hide(); cross.setAttribute("opacity", 0); });
+
+  table(document.getElementById("tb-week"), ["Hour", "Actual", "Predicted", "Error"],
+    A.map((v, i) => [T[i].slice(0, 16), fmt(v), fmt(P[i]), fmt(P[i] - v)]));
+})();
+</script>
+</body>
+</html>
